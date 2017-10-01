@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+    <head>
+
+    </head>
+    <body>
+         <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+				<script src="/three.js-master/build/three.js"></script>
+        <script src="/OBJLoader.js"></script>
+        <!-- <script src="/three.js-master/examples/js/loaders/OBJLoader.js"></script> -->
+				<!-- <script src="/three.js-master/examples/js/loaders/OBJLoader.js"></script>
+				<script src="/three.js-master/examples/js/loaders/BabylonLoader.js"></script>
+				<script src="/three.js-master/examples/js/controls/TrackballControls.js"></script> -->
+    </body>
+
+		<script>
+			var brain, camera, controls, scene, renderer;
+			var rendered = false;
+			init();
+		    var socket = io.connect('http://localhost:4200');
+		    socket.on('connect', function(data) {
+			   socket.emit('join', 'Hello World from client');
+		    });
+				
+			
+			socket.on('serial_update', function(data) {
+				if (!rendered) {
+					console.log("not ready yet")
+				}
+				else {
+
+
+					console.log(data);
+					animate();
+
+
+							
+					function degreesToRadians(x){
+						return x * Math.PI/180;
+					}
+
+					function animate() {
+						requestAnimationFrame( animate );
+						var dataArray = data.split(",");
+						//if (dataArray[3] != 0)
+							//camera.position.z = dataArray[3];
+						brain.rotation.x = degreesToRadians(dataArray[0]);
+						brain.rotation.z = degreesToRadians(dataArray[2]);
+						brain.rotation.y = degreesToRadians(dataArray[1]);
+						
+						renderer.render( scene, camera );
+					}
+
+				}
+
+				//function render() {
+					//renderer.render( scene, camera );
+				//}			
+			});
+
+			function init() {
+				scene = new THREE.Scene();
+				camera = new THREE.PerspectiveCamera( 100, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera.position.z = 5;
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+
+							console.log( item, loaded, total );
+
+				};
+
+				var texture = new THREE.Texture();
+
+				var onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( Math.round(percentComplete, 2) + '% downloaded' );
+					}
+				};
+
+				var onError = function ( xhr ) {
+				};
+				var ambient = new THREE.AmbientLight( 0x101030 );
+            	scene.add( ambient );
+
+            	var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+            	directionalLight.position.set( 0, 0, 1 );
+            	scene.add( directionalLight );
+            	// model
+    			var loader = new THREE.OBJLoader( manager );
+            	var material = new THREE.MeshPhongMaterial({color: 'white' });//,side: THREE.DoubleSide});
+    			loader.load( '/models/brain.obj', function ( object ) {
+              		brain = object;
+              		console.log(object);
+    				object.traverse( function ( child ) {
+                		console.log(child);
+    					if ( child instanceof THREE.Mesh ) {
+                  			child.material = material;
+    					};
+                		scene.add(object);
+    				});
+              	console.log(scene);
+              
+
+				}, onProgress, onError );
+				
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild(renderer.domElement);
+				rendered = true;
+			}
+		</script>
+</html>

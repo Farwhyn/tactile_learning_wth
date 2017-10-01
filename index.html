@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+    <head>
+
+    </head>
+    <body>
+         <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+				<script src="/three.js-master/build/three.js"></script>
+				<!--<script src="/three.js-master/examples/js/loaders/OBJLoader.js"></script>-->
+    </body>
+
+		<script>
+				var data2;
+				var scene = new THREE.Scene();
+				var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+				var renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				var geometry = new THREE.DodecahedronGeometry(1, 0);
+						var material = new THREE.MeshPhongMaterial( { color: 0x00ff00 } );
+						var cube = new THREE.Mesh( geometry, material );
+						scene.add( cube );
+						var light = new THREE.DirectionalLight( 0xffffff );
+						light.position.set( 0, 1, 1 ).normalize();
+						scene.add(light);
+				document.body.appendChild( renderer.domElement );
+		    var socket = io.connect('http://localhost:4200');
+		    socket.on('connect', function(data) {
+		        socket.emit('join', 'Hello World from client');
+		    });
+				socket.on('serial_update', function(data) {
+						console.log(data)
+						data2 = data;
+
+						// var loader = new THREE.OBJLoader();
+						//
+						// // load a resource
+						// loader.load(
+						// 	// resource URL
+						// 	'/three.js-master/examples/models/obj/cerberus/Cerberus.obj',
+						// 	// Function when resource is loaded
+						// 	function ( object ) {
+						// 		console.log(object);
+						// 		scene.add( object );
+						// 		// scene.add(object['children'][0]);
+						// 		// for (var i = 0; i < object['children']; i++){
+						// 		// 	scene.add(object['children'][i]);
+						// 		// }
+						// 	}
+						// );
+
+						camera.position.z = 5;
+
+						function degreesToRadians(x){
+							return x * Math.PI/180;
+						}
+						console.log(scene);
+						var animate = function () {
+							// camera.position.z += 1;
+							//console.log(camera.position.z);
+							//data2.x += 1;
+							var dataArray = data2.split(",");
+// debugger;
+							//console.log("DATA");
+							console.log(data2);
+							requestAnimationFrame( animate );
+							cube.rotation.x = degreesToRadians(dataArray[0]);
+							cube.rotation.y = degreesToRadians(dataArray[1]);
+							cube.rotation.z = degreesToRadians(dataArray[2]);
+							//console.log("ROTATION");
+							//console.log(cube.rotation);
+							renderer.render(scene, camera);
+						};
+
+						animate();
+				});
+
+		</script>
+</html>
