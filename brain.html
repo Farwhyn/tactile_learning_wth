@@ -7,7 +7,8 @@
          <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
         <script src="/socket.io/socket.io.js"></script>
 				<script src="/three.js-master/build/three.js"></script>
-        <script src="/OBJLoader.js"></script>
+		<script src="/OBJLoader.js"></script>
+		<script src="/tween/tween.js"></script>
         <!-- <script src="/three.js-master/examples/js/loaders/OBJLoader.js"></script> -->
 				<!-- <script src="/three.js-master/examples/js/loaders/OBJLoader.js"></script>
 				<script src="/three.js-master/examples/js/loaders/BabylonLoader.js"></script>
@@ -20,7 +21,7 @@
 			init();
 		    var socket = io.connect('http://localhost:4200');
 		    socket.on('connect', function(data) {
-			   socket.emit('join', 'Hello World from client');
+				socket.emit('join', 'Hello World from client');
 		    });
 				
 			
@@ -31,7 +32,7 @@
 				else {
 
 
-					console.log(data);
+					//console.log(data);
 					animate();
 
 
@@ -41,16 +42,21 @@
 					}
 
 					function animate() {
+										
 						requestAnimationFrame( animate );
 						var dataArray = data.split(",");
-						//if (dataArray[3] != 0)
-							//camera.position.z = dataArray[3];
-						brain.rotation.x = degreesToRadians(dataArray[0]);
-						brain.rotation.z = degreesToRadians(dataArray[2]);
-						brain.rotation.y = degreesToRadians(dataArray[1]);
-						
-						renderer.render( scene, camera );
+						if (dataArray[3] != 0)
+							camera.position.z = dataArray[3];
+						brain.rotation.x = degreesToRadians(dataArray[1]);
+						brain.rotation.z = degreesToRadians(dataArray[0]);
+						brain.rotation.y = degreesToRadians(dataArray[2]);
+						render();
+						//renderer.render( scene, camera );
 					}
+					function render() {
+						//TWEEN.update(),
+						renderer.render( scene, camera );
+					}	
 
 				}
 
@@ -88,21 +94,29 @@
             	directionalLight.position.set( 0, 0, 1 );
             	scene.add( directionalLight );
             	// model
-    			var loader = new THREE.OBJLoader( manager );
-            	var material = new THREE.MeshPhongMaterial({color: 'white' });//,side: THREE.DoubleSide});
-    			loader.load( '/models/brain.obj', function ( object ) {
-              		brain = object;
-              		console.log(object);
-    				object.traverse( function ( child ) {
-                		console.log(child);
-    					if ( child instanceof THREE.Mesh ) {
-                  			child.material = material;
-    					};
-                		scene.add(object);
-    				});
-              	console.log(scene);
-              
-
+				index = 0;
+				var loader = new THREE.OBJLoader( manager );
+				var material1 = new THREE.MeshPhongMaterial({color: '#51A39D', transparent: true, opacity: 0.8});//,side: THREE.DoubleSide});
+				var material2 = new THREE.MeshPhongMaterial({color: '#B7695C', transparent: true, opacity: 0.8});//,side: THREE.DoubleSide});
+				loader.load('/models/brain.obj', function ( object ) {
+				  brain = object;
+				  console.log(object);
+				  object.traverse( function ( child ) {
+					console.log(child);
+					if ( child instanceof THREE.Mesh ) {
+					  if (index == 1) {
+						child.material = material1;
+					  }
+					  else {
+						child.material = material2;
+					  }
+					};
+					scene.add(object);
+					index += 1;
+				  } );
+				  console.log(scene);
+				  //animate();
+	  
 				}, onProgress, onError );
 				
 				renderer = new THREE.WebGLRenderer();
